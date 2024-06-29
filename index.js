@@ -3,8 +3,10 @@ import express from "express";
 import cors from "cors";
 import sequelize from "./configs/db.config.js";
 import cookieParser from "cookie-parser";
-import User from "./models/user.model.js"; // Assuming this is correct
+import User from "./models/user.model.js";
+import Chat from "./models/chat.model.js";
 import UserRouter from "./routes/user.route.js"; // Adjust path to your routes file
+import ChatRouter from "./routes/chat.route.js"; // Adjust path to your routes file
 
 const app = express();
 app.use(cookieParser());
@@ -26,10 +28,11 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/user/", UserRouter);
+app.use("/api/v1/chat/", ChatRouter);
 
 // Error handling middleware should be after routes
 app.use((err, req, res, next) => {
-  console.log("Schema error");
+  console.log("Schema error", req.body);
   if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
     return res
       .status(400)
@@ -37,6 +40,9 @@ app.use((err, req, res, next) => {
   }
   next();
 });
+
+User.hasMany(Chat);
+Chat.belongsTo(User);
 
 // Database sync and server start
 sequelize
