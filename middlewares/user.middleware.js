@@ -87,7 +87,6 @@ export const refreshMiddleware = async (req, res, next) => {
       email,
       id,
     });
-    console.log(newAccessToken);
     req.user.accessToken = newAccessToken;
     next();
   } catch (error) {

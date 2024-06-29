@@ -45,13 +45,14 @@ export const accessTokenValidation = async (req, res, next) => {
   // const { accessToken } = req.cookies;
   const tokenHeader = req.headers["authorization"];
   const accessToken = tokenHeader && tokenHeader.split(" ")[1];
-
+  console.log(accessToken);
   if (!accessToken) {
     return res.status(401).json(new ApiError(401, `Access Token is Missing`));
   }
   try {
     const payload = jwt.verify(accessToken, "awesome");
     req.user = payload;
+    console.log("request forwareded to controller");
     next();
   } catch (error) {
     return res
@@ -61,15 +62,12 @@ export const accessTokenValidation = async (req, res, next) => {
 };
 
 export const refreshTokenValidation = async (req, res, next) => {
-  console.log(req);
   const refreshToken = req.cookies["refreshToken"];
-  console.log(refreshToken);
   if (!refreshToken) {
     return res.status(401).json(new ApiError(401, `Refresh Token is Missing`));
   }
   try {
     const payload = jwt.verify(refreshToken, "emosewa");
-    console.log(payload);
     req.user = payload;
     next();
   } catch (error) {

@@ -14,10 +14,10 @@ export const verifyPasswordFunction = async (password, hashedPassword) => {
 };
 
 export const generateAccessToken = ({ email, id }) => {
-  const accessToken = jwt.sign({ email, id }, "awesome", { expiresIn: "15s" });
+  const accessToken = jwt.sign({ email, id }, "awesome", { expiresIn: "1h" });
   return accessToken;
 };
 export const generateRefreshToken = ({ email, id }) => {
-  const refreshToken = jwt.sign({ email, id }, "emosewa", { expiresIn: "15m" });
+  const refreshToken = jwt.sign({ email, id }, "emosewa", { expiresIn: "1d" });
   return refreshToken;
 };

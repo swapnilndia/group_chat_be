@@ -45,7 +45,6 @@ export const signin_controller = async (req, res) => {
       return res.status(400).json(new ApiError(400, `Unable to Signin`));
     }
     // Set the refresh token in a cookie with secure and httpOnly options
-    res.cookie("accessToken", accessToken);
     res.cookie("refreshToken", refreshToken);
 
     return res
@@ -94,7 +93,6 @@ export const signout_controller = async (req, res) => {
     //   secure: true, // Set 'secure' to true in production if using HTTPS
     //   sameSite: "strict", // Optionally specify sameSite attribute
     // });
-    res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
 
     return res
@@ -140,9 +138,7 @@ export const getUserInfo_controller = async (req, res) => {
 };
 
 export const refresh_controller = async (req, res) => {
-  console.log(req.user);
   const { id, accessToken } = req.user;
-  console.log(accessToken);
   try {
     const updateUser = await User.update(
       { accessToken },
@@ -152,14 +148,12 @@ export const refresh_controller = async (req, res) => {
         },
       }
     );
-    console.log(updateUser);
     if (updateUser[0] < 1) {
       return res
         .status(400)
         .json(new ApiError(400, `Unable to update Access token`));
     }
     const userInfo = await User.findByPk(id);
-    console.log(userInfo);
     return res.status(200).json(
       new ApiResponse(200, "Token successfully refreshed", {
         accessToken,
