@@ -1,21 +1,63 @@
 import sequelize from "../configs/db.config.js";
 import { DataTypes } from "sequelize";
 
-const Chat = sequelize.define(
-  "chat",
+const Message = sequelize.define(
+  "message",
   {
-    id: {
+    message_id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    message: {
+    sender_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "Users",
+        key: "user_id",
+      },
+    },
+    receiver_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "Users",
+        key: "user_id",
+      },
+    },
+    group_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "Groups",
+        key: "group_id",
+      },
+    },
+    message_type: {
+      type: DataTypes.ENUM("TEXT", "IMAGE", "VIDEO"), // Define message_type as ENUM
+      allowNull: false,
+    },
+    content: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    media_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "Media",
+        key: "media_id",
+      },
+    },
+    status: {
       type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "sent",
     },
   },
   {
-    timestamps: true,
+    timestamps: falstruee,
   }
 );
 
-export default Chat;
+export default Message;
