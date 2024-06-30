@@ -2,33 +2,38 @@ import sequelize from "../configs/db.config.js";
 import { DataTypes } from "sequelize";
 
 const GroupMember = sequelize.define(
-  "groupmember",
+  "GroupMember",
   {
-    id: {
+    group_member_id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    userId: {
-      type: DataTypes.STRING,
+
+    user_id: {
+      type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: "users",
+        key: "user_id",
+      },
     },
-    groupId: {
-      type: DataTypes.STRING,
+    group_id: {
+      type: DataTypes.INTEGER,
       allowNull: false,
-      unique: true,
+      references: {
+        model: "groups",
+        key: "group_id",
+      },
     },
-    isAdmin: {
+    is_admin: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
-    joinedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
   },
   {
-    timestamps: true,
+    timestamps: false,
+    tableName: "groupmembers",
   }
 );
 

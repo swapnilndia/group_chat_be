@@ -1,20 +1,34 @@
-import "dotenv/config";
+// index.js
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import cors from "cors";
 import sequelize from "./configs/db.config.js";
 import cookieParser from "cookie-parser";
+import MessageRouter from "./routes/message.route.js";
+import GroupRouter from "./routes/group.route.js";
+import UserRouter from "./routes/user.route.js";
+// import associateModels from "./configs/associateModels.js";
 import User from "./models/user.model.js";
-import Chat from "./models/chat.model.js";
-import UserRouter from "./routes/user.route.js"; // Adjust path to your routes file
-import ChatRouter from "./routes/chat.route.js"; // Adjust path to your routes file
+import Message from "./models/message.model.js";
+import Group from "./models/group.model.js";
+import GroupMember from "./models/groupMember.model.js";
+import Media from "./models/media.model.js";
 
 const app = express();
 app.use(cookieParser());
 const PORT = process.env.PORT || 3001;
+console.log(
+  process.env.DB_NAME,
+  process.env.DB_USERNAME,
+  process.env.DB_PASSWORD,
+  process.env.DB_HOST,
+  process.env.PORT
+);
 
 // Middleware setup
-app.use(express.json()); // Use built-in middleware for JSON parsing
-app.use(express.urlencoded({ extended: true })); // Use built-in middleware for URL-encoded data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -28,7 +42,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/user/", UserRouter);
-app.use("/api/v1/chat/", ChatRouter);
+app.use("/api/v1/message/", MessageRouter);
+app.use("/api/v1/group/", GroupRouter);
 
 // Error handling middleware should be after routes
 app.use((err, req, res, next) => {
@@ -40,15 +55,33 @@ app.use((err, req, res, next) => {
   }
   next();
 });
+User.hasMany(Message, { foreignKey: "sender_id", onDelete: "CASCADE" });
+Message.belongsTo(User, { foreignKey: "sender_id", onDelete: "CASCADE" });
 
-User.hasMany(Chat);
-Chat.belongsTo(User);
+User.hasMany(Message, { foreignKey: "receiver_id", onDelete: "CASCADE" });
+Message.belongsTo(User, { foreignKey: "receiver_id", onDelete: "CASCADE" });
+
+User.belongsToMany(Group, { through: GroupMember, foreignKey: "user_id" });
+Group.belongsToMany(User, { through: GroupMember, foreignKey: "group_id" });
+
+GroupMember.belongsTo(User, { foreignKey: "user_id", onDelete: "CASCADE" });
+GroupMember.belongsTo(Group, { foreignKey: "group_id", onDelete: "CASCADE" });
+
+Group.hasMany(GroupMember, { foreignKey: "group_id", onDelete: "CASCADE" });
+User.hasMany(GroupMember, { foreignKey: "user_id", onDelete: "CASCADE" });
+
+Group.hasMany(Message, { foreignKey: "group_id", onDelete: "CASCADE" });
+Message.belongsTo(Group, { foreignKey: "group_id", onDelete: "CASCADE" });
+
+Message.hasMany(Media, { foreignKey: "media_id", onDelete: "CASCADE" });
+Media.belongsTo(Message, { foreignKey: "media_id", onDelete: "CASCADE" });
+// Call the function to define associations
+// associateModels();
 
 // Database sync and server start
 sequelize
-  // .sync({ force: true }) // Avoid force: true in production
-  .sync() // Avoid force: true in production
-
+  // .sync({ force: true })
+  .sync()
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server is running at PORT ${PORT}`);

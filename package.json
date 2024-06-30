@@ -1,5 +1,5 @@
 {
-  "name": "group_chat",
+  "name": "group_message",
   "version": "1.0.0",
   "description": "A whatsapp clone",
   "main": "index.js",

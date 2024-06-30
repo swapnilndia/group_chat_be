@@ -39,6 +39,7 @@ export const signupMiddleware = async (req, res, next) => {
 };
 export const signinMiddleware = async (req, res, next) => {
   const { email, password } = req.body;
+  console.log(email, password);
   try {
     const checkUserExists = await User.findOne({ where: { email } });
 
@@ -60,15 +61,15 @@ export const signinMiddleware = async (req, res, next) => {
     }
     const accessToken = generateAccessToken({
       email,
-      id: checkUserExists.dataValues.id,
+      user_id: checkUserExists.dataValues.user_id,
     });
     const refreshToken = generateRefreshToken({
       email,
-      id: checkUserExists.dataValues.id,
+      user_id: checkUserExists.dataValues.user_id,
     });
     req.body.accessToken = accessToken;
     req.body.refreshToken = refreshToken;
-    req.body.id = checkUserExists.dataValues.id;
+    req.body.user_id = checkUserExists.dataValues.user_id;
     next();
   } catch (error) {
     return res.status(500).json(
@@ -81,11 +82,11 @@ export const signinMiddleware = async (req, res, next) => {
   }
 };
 export const refreshMiddleware = async (req, res, next) => {
-  const { email, id } = req.user;
+  const { email, user_id } = req.user;
   try {
     const newAccessToken = generateAccessToken({
       email,
-      id,
+      user_id,
     });
     req.user.accessToken = newAccessToken;
     next();
