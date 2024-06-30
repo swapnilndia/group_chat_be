@@ -30,14 +30,14 @@ export const signup_controller = async (req, res) => {
 };
 
 export const signin_controller = async (req, res) => {
-  const { accessToken, refreshToken, id } = req.body;
+  const { accessToken, refreshToken, user_id } = req.body;
   console.log(accessToken, refreshToken);
   try {
     const updateUser = await User.update(
       { accessToken, refreshToken },
       {
         where: {
-          id,
+          user_id,
         },
       }
     );
@@ -69,13 +69,13 @@ export const signin_controller = async (req, res) => {
 
 export const signout_controller = async (req, res) => {
   console.log(req.user);
-  const { id } = req.user;
+  const { user_id } = req.user;
   try {
     const updateUser = await User.update(
       { accessToken: null, refreshToken: null },
       {
         where: {
-          id,
+          user_id,
         },
       }
     );
@@ -112,10 +112,17 @@ export const signout_controller = async (req, res) => {
 };
 
 export const getUserInfo_controller = async (req, res) => {
-  const { id } = req.user;
+  const { user_id } = req.user;
   try {
-    const userInfo = await User.findByPk(id, {
-      attributes: ["id", "name", "email", "phone", "createdAt", "updatedAt"],
+    const userInfo = await User.findByPk(user_id, {
+      attributes: [
+        "user_id",
+        "name",
+        "email",
+        "phone",
+        "createdAt",
+        "updatedAt",
+      ],
     });
     if (!userInfo) {
       return res.status(400).json(new ApiError(400, `Unable to Signin`));
@@ -138,13 +145,13 @@ export const getUserInfo_controller = async (req, res) => {
 };
 
 export const refresh_controller = async (req, res) => {
-  const { id, accessToken } = req.user;
+  const { user_id, accessToken } = req.user;
   try {
     const updateUser = await User.update(
       { accessToken },
       {
         where: {
-          id,
+          user_id,
         },
       }
     );
@@ -153,7 +160,7 @@ export const refresh_controller = async (req, res) => {
         .status(400)
         .json(new ApiError(400, `Unable to update Access token`));
     }
-    const userInfo = await User.findByPk(id);
+    const userInfo = await User.findByPk(user_id);
     return res.status(200).json(
       new ApiResponse(200, "Token successfully refreshed", {
         accessToken,

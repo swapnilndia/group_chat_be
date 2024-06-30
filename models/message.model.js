@@ -13,7 +13,7 @@ const Message = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "Users",
+        model: "users",
         key: "user_id",
       },
     },
@@ -21,7 +21,7 @@ const Message = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: "Users",
+        model: "users",
         key: "user_id",
       },
     },
@@ -29,7 +29,7 @@ const Message = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: "Groups",
+        model: "groups",
         key: "group_id",
       },
     },
@@ -45,7 +45,7 @@ const Message = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: "Media",
+        model: "media",
         key: "media_id",
       },
     },
@@ -56,7 +56,8 @@ const Message = sequelize.define(
     },
   },
   {
-    timestamps: falstruee,
+    timestamps: true,
+    tableName: "messages",
   }
 );
 

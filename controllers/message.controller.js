@@ -1,17 +1,17 @@
 import { Sequelize } from "sequelize";
-import Chat from "../models/chat.model.js";
+import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
-export const newChat_controller = async (req, res) => {
+export const newMessage_controller = async (req, res) => {
   console.log("request received", req.body);
-  const { id } = req.user;
+  const { user_id } = req.user;
   const { message } = req.body;
 
-  console.log(id, message);
+  console.log(user_id, message);
   try {
-    const createNewMessage = await Chat.create({ message, userId: id });
+    const createNewMessage = await Message.create({ message, userId: user_id });
     if (!createNewMessage) {
       return res
         .status(400)
@@ -33,11 +33,11 @@ export const newChat_controller = async (req, res) => {
     console.log(error);
   }
 };
-export const chatList_controller = async (req, res) => {
+export const messageList_controller = async (req, res) => {
   try {
-    const chatList = await Chat.findAll({
+    const messageList = await Message.findAll({
       attributes: [
-        "id",
+        "user_id",
         "message",
         "createdAt",
         "updatedAt",
@@ -51,17 +51,24 @@ export const chatList_controller = async (req, res) => {
         },
       ],
     });
-    if (!chatList) {
+    if (!messageList) {
       return res
         .status(400)
         .json(
-          new ApiError(400, `Unable to fetch chatlist at the moment`).toJSON()
+          new ApiError(
+            400,
+            `Unable to fetch messagelist at the moment`
+          ).toJSON()
         );
     }
     return res
       .status(201)
       .json(
-        new ApiResponse(200, "Chatlist fetched successfully", chatList).toJSON()
+        new ApiResponse(
+          200,
+          "Messagelist fetched successfully",
+          messageList
+        ).toJSON()
       );
   } catch (error) {
     res.status(500).json(

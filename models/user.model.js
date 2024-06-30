@@ -2,9 +2,9 @@ import sequelize from "../configs/db.config.js";
 import { DataTypes } from "sequelize";
 
 const User = sequelize.define(
-  "user",
+  "User",
   {
-    id: {
+    user_id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
@@ -16,12 +16,10 @@ const User = sequelize.define(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     phone: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     password: {
       type: DataTypes.STRING,
@@ -38,6 +36,7 @@ const User = sequelize.define(
   },
   {
     timestamps: true,
+    tableName: "users",
   }
 );
 
