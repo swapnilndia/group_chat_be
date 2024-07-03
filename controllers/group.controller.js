@@ -1,3 +1,4 @@
+import { Op, Sequelize } from "sequelize";
 import sequelize from "../configs/db.config.js"; // Assuming this exports your Sequelize instance
 import Group from "../models/group.model.js";
 import GroupMember from "../models/groupMember.model.js";
@@ -35,11 +36,15 @@ const listOfGroup = async (userId) => {
     include: {
       model: Group,
       attributes: ["group_name"],
+      where: {
+        group_name: {
+          [Op.ne]: null,
+        },
+      },
     },
     raw: true,
     nest: false,
   });
-
   return groupList;
 };
 
@@ -67,7 +72,13 @@ export const createGroup_controller = async (req, res) => {
 
       return res
         .status(201)
-        .json(new ApiResponse(201, "New group created successfully").toJSON());
+        .json(
+          new ApiResponse(
+            201,
+            "New group created successfully",
+            newGroup
+          ).toJSON()
+        );
     }
     return res.status(400).json(
       new ApiError(500, "Unable to create Group", {
@@ -145,7 +156,6 @@ export const changeGroupName_controller = async (req, res) => {
         stack: error.stack,
       }).toJSON()
     );
-    console.error(error);
   }
 };
 
@@ -162,8 +172,8 @@ export const deleteGroup_controller = async (req, res) => {
     console.log(deletedGroup);
     if (deletedGroup > 0) {
       return res
-        .status(204)
-        .json(new ApiResponse(204, "Group deleted successfully").toJSON());
+        .status(200)
+        .json(new ApiResponse(200, "Group deleted successfully").toJSON());
     }
     return res
       .status(404)
@@ -182,21 +192,15 @@ export const deleteGroup_controller = async (req, res) => {
 
 export const addUsersToGroup_controller = async (req, res) => {
   const { group_id } = req.params;
-  const { userToAddArray } = req.body;
+  const { user_id } = req.body;
 
-  const bulkCreateArray = userToAddArray.map((id) => {
-    return {
-      user_id: id,
-      group_id: +group_id,
-      is_admin: false,
-    };
-  });
   try {
-    console.log("This is bulkCreateArray", bulkCreateArray);
-    const addUsersToGroup = await GroupMember.bulkCreate(bulkCreateArray);
-    console.log(addUsersToGroup);
+    const addUserToGroup = await GroupMember.create({
+      group_id,
+      user_id,
+    });
 
-    if (addUsersToGroup) {
+    if (addUserToGroup) {
       return res
         .status(201)
         .json(
@@ -218,15 +222,69 @@ export const addUsersToGroup_controller = async (req, res) => {
   }
 };
 
+export const searchUserForGroup_controller = async (req, res) => {
+  const { email, phone } = req.body;
+  console.log(req.user);
+  const { user_id } = req.user;
+
+  let whereClause;
+  if (email && !phone) {
+    whereClause = {
+      email,
+    };
+  } else if (phone && !email) {
+    whereClause = {
+      phone,
+    };
+  } else {
+    whereClause = {
+      email,
+      phone,
+    };
+  }
+  console.log(whereClause);
+  try {
+    const searchedUser = await User.findOne({
+      where: whereClause,
+    });
+    console.log(searchedUser);
+    if (!searchedUser) {
+      return res.status(404).json(new ApiError(404, "User not found").toJSON());
+    }
+    if (searchedUser.dataValues.user_id === user_id) {
+      return res
+        .status(401)
+        .json(new ApiError(404, "Don't be oversmart").toJSON());
+    }
+    return res
+      .status(201)
+      .json(
+        new ApiResponse(
+          201,
+          "Searched user found successfully",
+          searchedUser
+        ).toJSON()
+      );
+  } catch (error) {
+    res.status(500).json(
+      new ApiError(500, "Something went wrong", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      }).toJSON()
+    );
+    console.error(error);
+  }
+};
+
 export const removeUsersFromGroup_controller = async (req, res) => {
   const { group_id } = req.params;
-  const { userToRemoveId } = req.body;
-  console.log(group_id, userToRemoveId);
+  const { user_id } = req.body;
   try {
     const removeUser = await GroupMember.destroy({
       where: {
         group_id,
-        user_id: userToRemoveId,
+        user_id,
       },
     });
     console.log(removeUser);
@@ -256,14 +314,14 @@ export const removeUsersFromGroup_controller = async (req, res) => {
 export const makeGroupAdmin_controller = async (req, res) => {
   const { group_id } = req.params;
   const { user_id } = req.body;
-
+  console.log(group_id, user_id);
   try {
     const updatedGroupMember = await GroupMember.update(
       { is_admin: true },
       {
         where: {
           group_id: +group_id,
-          user_id: user_id,
+          user_id,
         },
       }
     );
@@ -298,7 +356,7 @@ export const removeGroupAdmin_controller = async (req, res) => {
       {
         where: {
           group_id: +group_id,
-          user_id: user_id,
+          user_id,
         },
       }
     );
@@ -325,35 +383,33 @@ export const removeGroupAdmin_controller = async (req, res) => {
 };
 export const getUserForGroup_controller = async (req, res) => {
   const { group_id } = req.params;
+  const isUserGroupAdmin = req.isUserGroupAdmin;
+  console.log("351 ", isUserGroupAdmin);
   try {
-    const userForGroup = await GroupMember.findAll({
-      where: {
-        group_id,
-      },
+    const groupDetail = await Group.findByPk(group_id, {
       include: [
         {
           model: User,
-          attributes: ["name", "email", "phone"],
-        },
-        {
-          model: Group,
-          attributes: ["group_name"],
+          attributes: ["user_id", "name", "email", "phone"],
         },
       ],
+      // raw: true,
 
-      raw: true,
       nest: false,
     });
-    console.log(userForGroup);
-
-    if (userForGroup) {
+    console.log(groupDetail);
+    if (groupDetail) {
+      const updatedGroupDetail = {
+        ...groupDetail.dataValues,
+        isUserGroupAdmin,
+      };
       return res
         .status(200)
         .json(
           new ApiResponse(
             200,
             "Group member fetched successfully",
-            userForGroup
+            updatedGroupDetail
           ).toJSON()
         );
     }

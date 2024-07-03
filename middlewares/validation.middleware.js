@@ -1,6 +1,8 @@
 import { signinFormSchema, signupFormSchema } from "../utils/schema.js";
 import ApiError from "../utils/ApiError.js";
 import jwt from "jsonwebtoken";
+import GroupMember from "../models/groupMember.model.js";
+import ApiResponse from "../utils/ApiResponse.js";
 
 export const signupFormValidation = async (req, res, next) => {
   try {
@@ -72,5 +74,76 @@ export const refreshTokenValidation = async (req, res, next) => {
     return res
       .status(403)
       .json(new ApiError(403, "Forbidden: Invalid refresh token"));
+  }
+};
+
+export const authorizeAdminAccess = async (req, res, next) => {
+  const { user_id } = req.user;
+  const { group_id } = req.params;
+  try {
+    const fetchUser = await GroupMember.findOne({
+      where: {
+        user_id,
+        group_id,
+      },
+    });
+    if (!fetchUser) {
+      return res
+        .status(401)
+        .json(new ApiError(401, `User is not found in Group`));
+    }
+    if (!fetchUser.dataValues.is_admin) {
+      return res
+        .status(403)
+        .json(
+          new ApiError(
+            401,
+            `User does not have sufficient permissions to perform this task`
+          )
+        );
+    }
+    next();
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(
+      new ApiError(500, "Something went wrong", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      }).toJSON()
+    );
+  }
+};
+
+export const checkGroupAuthorizationLevel = async (req, res, next) => {
+  const { user_id } = req.user;
+  const { group_id } = req.params;
+  try {
+    const fetchUser = await GroupMember.findOne({
+      where: {
+        user_id,
+        group_id,
+      },
+    });
+    if (!fetchUser) {
+      return res
+        .status(401)
+        .json(new ApiError(401, `User is not found in Group`));
+    }
+    if (!fetchUser.dataValues.is_admin) {
+      req.isUserGroupAdmin = false;
+      next();
+    } else {
+      req.isUserGroupAdmin = true;
+      next();
+    }
+  } catch (error) {
+    res.status(500).json(
+      new ApiError(500, "Something went wrong", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      }).toJSON()
+    );
   }
 };
