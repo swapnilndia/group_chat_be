@@ -8,12 +8,13 @@ import cookieParser from "cookie-parser";
 import MessageRouter from "./routes/message.route.js";
 import GroupRouter from "./routes/group.route.js";
 import UserRouter from "./routes/user.route.js";
-// import associateModels from "./configs/associateModels.js";
+import ContactRouter from "./routes/contact.route.js";
 import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
 import Group from "./models/group.model.js";
 import GroupMember from "./models/groupMember.model.js";
 import Media from "./models/media.model.js";
+import Contact from "./models/contact.model.js";
 
 const app = express();
 app.use(cookieParser());
@@ -44,6 +45,7 @@ app.get("/", (req, res) => {
 app.use("/api/v1/user/", UserRouter);
 app.use("/api/v1/message/", MessageRouter);
 app.use("/api/v1/group/", GroupRouter);
+app.use("/api/v1/contact/", ContactRouter);
 
 // Error handling middleware should be after routes
 app.use((err, req, res, next) => {
@@ -75,13 +77,18 @@ Message.belongsTo(Group, { foreignKey: "group_id", onDelete: "CASCADE" });
 
 Message.hasMany(Media, { foreignKey: "media_id", onDelete: "CASCADE" });
 Media.belongsTo(Message, { foreignKey: "media_id", onDelete: "CASCADE" });
-// Call the function to define associations
-// associateModels();
 
-// Database sync and server start
+// Self-referencing association
+User.belongsToMany(User, {
+  through: Contact,
+  as: "Contacts",
+  foreignKey: "user_id",
+  otherKey: "contact_user_id",
+});
+
 sequelize
-  // .sync({ force: true })
-  .sync()
+  .sync({ force: true })
+  // .sync()
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server is running at PORT ${PORT}`);
