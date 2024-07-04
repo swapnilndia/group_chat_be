@@ -50,10 +50,12 @@ export const signinMiddleware = async (req, res, next) => {
           new ApiError(404, `User with Email: ${email} was not found`).toJSON()
         );
     }
+    console.log(checkUserExists);
     const matchPassword = await verifyPasswordFunction(
       password,
       checkUserExists.dataValues.password
     );
+    console.log(matchPassword);
     if (!matchPassword) {
       return res
         .status(401)
@@ -72,6 +74,7 @@ export const signinMiddleware = async (req, res, next) => {
     req.body.user_id = checkUserExists.dataValues.user_id;
     next();
   } catch (error) {
+    console.log("middleware", error);
     return res.status(500).json(
       new ApiError(500, `Something went wrong`, {
         name: error.name,
