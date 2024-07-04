@@ -44,9 +44,9 @@ router.put(
 );
 
 router.post(
-  "/search/:group_id",
+  "/search",
   accessTokenValidation,
-  authorizeAdminAccess,
+  // authorizeAdminAccess,
   searchUserForGroup_controller
 );
 

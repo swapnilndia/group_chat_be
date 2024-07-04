@@ -37,9 +37,6 @@ const User = sequelize.define(
   {
     timestamps: true,
     tableName: "users",
-    defaultScope: {
-      attributes: { exclude: ["password", "accessToken", "refreshToken"] },
-    },
   }
 );
 
