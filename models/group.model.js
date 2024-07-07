@@ -13,6 +13,11 @@ const Group = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    connectionKey: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      defaultValue: DataTypes.UUIDV4,
+    },
     created_by: {
       type: DataTypes.INTEGER,
       allowNull: false,
