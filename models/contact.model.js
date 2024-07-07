@@ -30,6 +30,11 @@ const Contact = sequelize.define(
       allowNull: false,
       defaultValue: "pending", // or 'accepted', 'blocked', etc.
     },
+    connectionKey: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      defaultValue: DataTypes.UUIDV4,
+    },
   },
   {
     timestamps: true,

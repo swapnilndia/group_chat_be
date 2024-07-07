@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import cors from "cors";
+import http from "http";
+import { Server } from "socket.io";
 import sequelize from "./configs/db.config.js";
 import cookieParser from "cookie-parser";
 import MessageRouter from "./routes/message.route.js";
@@ -15,17 +17,23 @@ import Group from "./models/group.model.js";
 import GroupMember from "./models/groupMember.model.js";
 import Media from "./models/media.model.js";
 import Contact from "./models/contact.model.js";
+import personalMessageHandler from "./websocketHandlers/personalMessageHandler.js";
+import connectionHandler from "./websocketHandlers/connectionHandler.js";
+import { instrument } from "@socket.io/admin-ui";
+import groupMessageHandler from "./websocketHandlers/groupMessageHandler.js";
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:5173", "https://admin.socket.io"],
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Authorization"],
+    credentials: true,
+  },
+});
 app.use(cookieParser());
 const PORT = process.env.PORT || 3001;
-console.log(
-  process.env.DB_NAME,
-  process.env.DB_USERNAME,
-  process.env.DB_PASSWORD,
-  process.env.DB_HOST,
-  process.env.PORT
-);
 
 // Middleware setup
 app.use(express.json());
@@ -43,9 +51,25 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/user/", UserRouter);
-app.use("/api/v1/message/", MessageRouter);
+app.use("/api/v1/messages/", MessageRouter);
 app.use("/api/v1/group/", GroupRouter);
 app.use("/api/v1/contact/", ContactRouter);
+
+// Socket.IO connection handling
+io.on("connection", (socket) => {
+  console.log(`New client connected: ${socket.id}`);
+
+  // Handle user joins and disconnects
+  connectionHandler(socket, io);
+  // Register personal message handler
+  personalMessageHandler(socket, io);
+  groupMessageHandler(socket, io);
+
+  // Example: Handle disconnect event
+  socket.on("disconnect", () => {
+    console.log(`Socket disconnected: ${socket.id}`);
+  });
+});
 
 // Error handling middleware should be after routes
 app.use((err, req, res, next) => {
@@ -88,10 +112,14 @@ User.belongsToMany(User, {
 
 sequelize
   // .sync({ force: true })
+
   .sync()
+
   .then(() => {
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server is running at PORT ${PORT}`);
     });
   })
   .catch((error) => console.log(error));
+
+instrument(io, { auth: false });
