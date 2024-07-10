@@ -3,8 +3,11 @@ import { accessTokenValidation } from "../middlewares/validation.middleware.js";
 import {
   getGroupTextMessage_controller,
   getPersonalTextMessages_controller,
+  getSignedUrl_controller,
   groupTextMessage_controller,
   personalTextMessage_controller,
+  putSignedUrl_controller,
+  saveMediaMetadata_controller,
 } from "../controllers/message.controller.js";
 
 const router = Router();
@@ -25,19 +28,8 @@ router.get(
   getGroupTextMessage_controller
 );
 
-// Send Image
-router.post("/personal/image", accessTokenValidation);
-router.post("/group/image", accessTokenValidation);
-
-// Send Video
-router.post("/personal/video", accessTokenValidation);
-router.post("/group/video", accessTokenValidation);
-
-// Send Video
-router.post("/personal/document", accessTokenValidation);
-router.post("/group/document", accessTokenValidation);
-
-// Download media
-router.post("/media/:mediaId", accessTokenValidation);
-
+router.post("/upload-url", putSignedUrl_controller);
+router.post("/save-media", saveMediaMetadata_controller);
+router.post("/delete-media", accessTokenValidation);
+router.post("/download-url", getSignedUrl_controller);
 export default router;

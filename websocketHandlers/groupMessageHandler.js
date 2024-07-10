@@ -11,7 +11,7 @@ export default function groupMessageHandler(socket, io) {
 
   socket.on("group message", async (message, callback) => {
     console.log(message);
-    const { sender_id, group_id, content, room_id } = message;
+    const { sender_id, sender_name, group_id, content, room_id } = message;
 
     // Validate message data
     if (!sender_id || !group_id || !content) {
@@ -25,6 +25,7 @@ export default function groupMessageHandler(socket, io) {
       sender_id,
       group_id,
       content,
+      sender_name,
     };
 
     try {

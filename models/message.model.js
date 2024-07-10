@@ -17,6 +17,10 @@ const Message = sequelize.define(
         key: "user_id",
       },
     },
+    sender_name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     receiver_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -34,7 +38,7 @@ const Message = sequelize.define(
       },
     },
     message_type: {
-      type: DataTypes.ENUM("TEXT", "IMAGE", "VIDEO"), // Define message_type as ENUM
+      type: DataTypes.STRING,
       allowNull: false,
     },
     content: {

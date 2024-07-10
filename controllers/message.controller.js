@@ -1,8 +1,10 @@
-import { Op, Sequelize } from "sequelize";
+import { Op } from "sequelize";
 import Message from "../models/message.model.js";
-import User from "../models/user.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import { getObjectURL, putObject } from "../utils/aws.js";
+import Media from "../models/media.model.js";
+import sequelize from "../configs/db.config.js";
 
 export const personalTextMessage_controller = async (req, res) => {
   const { user_id } = req.user;
@@ -98,6 +100,20 @@ export const getPersonalTextMessages_controller = async (req, res) => {
         ],
       },
       order: [["createdAt", "ASC"]],
+      include: [
+        {
+          model: Media,
+          attributes: [
+            "media_id",
+            "file_name",
+            "file_type",
+            "file_key",
+            "file_size",
+            "uploaded_by",
+          ],
+          required: false, // This makes the join a LEFT JOIN
+        },
+      ],
     });
 
     if (newPersonalMessage) {
@@ -132,6 +148,21 @@ export const getGroupTextMessage_controller = async (req, res) => {
       where: {
         group_id: groupId,
       },
+      order: [["createdAt", "ASC"]],
+      include: [
+        {
+          model: Media,
+          attributes: [
+            "media_id",
+            "file_name",
+            "file_key",
+            "file_type",
+            "file_size",
+            "uploaded_by",
+          ],
+          required: false, // This makes the join a LEFT JOIN
+        },
+      ],
     });
     if (getGroupMessages) {
       return res
@@ -148,6 +179,107 @@ export const getGroupTextMessage_controller = async (req, res) => {
       .status(400)
       .json(new ApiError(400, "Unable to send message").toJSON());
   } catch (error) {
+    res.status(500).json(
+      new ApiError(500, "Something went wrong", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      }).toJSON()
+    );
+  }
+};
+export const putSignedUrl_controller = async (req, res) => {
+  const { filename, contentType, key } = req.body;
+
+  try {
+    const signedUrl = await putObject(filename, contentType, key);
+    if (signedUrl) {
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            "Signed URL successfully received",
+            signedUrl
+          ).toJSON()
+        );
+    }
+    return res
+      .status(400)
+      .json(new ApiError(400, "Unable to generate signed URL").toJSON());
+  } catch (error) {
+    console.error("Error getting signed URL:", error);
+    res.status(500).json(
+      new ApiError(500, "Something went wrong", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      }).toJSON()
+    );
+  }
+};
+export const saveMediaMetadata_controller = async (req, res) => {
+  console.log(req.body);
+  const { file_name, file_type, file_size, sender_id, receiver_id } = req.body;
+  const transaction = await sequelize.transaction();
+
+  try {
+    // Step 1: Save media metadata in the Media table
+    const media = await Media.create(
+      {
+        file_name,
+        file_type,
+        file_size,
+        uploaded_by: sender_id,
+      },
+      { transaction }
+    );
+
+    // Step 2: Save message information in the Message table
+    const message = await Message.create(
+      {
+        sender_id,
+        receiver_id,
+        group_id: null, // could be null if personal message
+        message_type: file_type, // should be "IMAGE" or "VIDEO"
+        content: null,
+        media_id: media.media_id,
+        status: "sent",
+      },
+      { transaction }
+    );
+
+    await transaction.commit();
+
+    res.json({ success: true, message, media });
+  } catch (error) {
+    await transaction.rollback();
+    console.error("Error saving media metadata:", error);
+    res.status(500).json({ error: "Error saving media metadata" });
+  }
+};
+
+export const getSignedUrl_controller = async (req, res) => {
+  const { key } = req.body;
+
+  try {
+    const signedUrl = await getObjectURL(key);
+    if (signedUrl) {
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            "Signed URL successfully received",
+            signedUrl
+          ).toJSON()
+        );
+    }
+    return res
+      .status(400)
+      .json(new ApiError(400, "Unable to generate signed URL").toJSON());
+  } catch (error) {
+    console.error("Error getting signed URL:", error);
     res.status(500).json(
       new ApiError(500, "Something went wrong", {
         name: error.name,

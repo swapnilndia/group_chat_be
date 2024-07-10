@@ -1,4 +1,3 @@
-// index.js
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
@@ -21,7 +20,8 @@ import personalMessageHandler from "./websocketHandlers/personalMessageHandler.j
 import connectionHandler from "./websocketHandlers/connectionHandler.js";
 import { instrument } from "@socket.io/admin-ui";
 import groupMessageHandler from "./websocketHandlers/groupMessageHandler.js";
-
+import personalMediaMessageHandler from "./websocketHandlers/personalMediaMessage.js";
+import groupMediaMessage from "./websocketHandlers/groupMediaMessage.js";
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -64,7 +64,8 @@ io.on("connection", (socket) => {
   // Register personal message handler
   personalMessageHandler(socket, io);
   groupMessageHandler(socket, io);
-
+  personalMediaMessageHandler(socket, io);
+  groupMediaMessage(socket, io);
   // Example: Handle disconnect event
   socket.on("disconnect", () => {
     console.log(`Socket disconnected: ${socket.id}`);
@@ -99,8 +100,7 @@ User.hasMany(GroupMember, { foreignKey: "user_id", onDelete: "CASCADE" });
 Group.hasMany(Message, { foreignKey: "group_id", onDelete: "CASCADE" });
 Message.belongsTo(Group, { foreignKey: "group_id", onDelete: "CASCADE" });
 
-Message.hasMany(Media, { foreignKey: "media_id", onDelete: "CASCADE" });
-Media.belongsTo(Message, { foreignKey: "media_id", onDelete: "CASCADE" });
+Message.belongsTo(Media, { foreignKey: "media_id" });
 
 // Self-referencing association
 User.belongsToMany(User, {
@@ -112,14 +112,11 @@ User.belongsToMany(User, {
 
 sequelize
   // .sync({ force: true })
-
   .sync()
-
   .then(() => {
     server.listen(PORT, () => {
       console.log(`Server is running at PORT ${PORT}`);
     });
   })
   .catch((error) => console.log(error));
-
 instrument(io, { auth: false });
