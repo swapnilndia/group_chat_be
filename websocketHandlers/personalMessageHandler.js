@@ -10,7 +10,7 @@ export default function personalMessageHandler(socket, io) {
   };
 
   socket.on("personal message", async (message, callback) => {
-    const { sender_id, receiver_id, content, room_id } = message;
+    const { sender_id, sender_name, receiver_id, content, room_id } = message;
 
     // Validate message data
     if (!sender_id || !receiver_id || !content) {
@@ -22,6 +22,7 @@ export default function personalMessageHandler(socket, io) {
     const newMessageData = {
       ...PERSONAL_TEXT_DEFAULT,
       sender_id,
+      sender_name,
       receiver_id,
       content,
     };
