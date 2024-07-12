@@ -67,13 +67,8 @@ console.log("Cron job scheduled");
 // Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-  })
-);
-
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Preflight requests
 // Routes setup
 app.get("/", (req, res) => {
   res.status(200).send("<h1>Hello</h1>");
