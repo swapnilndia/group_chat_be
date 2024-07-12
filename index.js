@@ -27,9 +27,27 @@ import cron from "cron";
 import { archiveOldMessages } from "./utils/archiveFunction.js";
 const app = express();
 const server = http.createServer(app);
+app.use(
+  cors({
+    origin: true,
+    optionsSuccessStatus: 200,
+    credentials: true,
+  })
+);
+app.options(
+  "*",
+  cors({
+    origin: true,
+    optionsSuccessStatus: 200,
+    credentials: true,
+  })
+);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "https://admin.socket.io"],
+    origin: [
+      "https://main.d1xmkj62r2mwg1.amplifyapp.com",
+      "https://admin.socket.io",
+    ],
     methods: ["GET", "POST"],
     allowedHeaders: ["Authorization"],
     credentials: true,
@@ -39,7 +57,7 @@ app.use(cookieParser());
 const PORT = process.env.PORT || 3001;
 
 const job = new cron.CronJob(
-  "*/2 * * * *",
+  "0 0 * * *",
   () => {
     archiveOldMessages();
   },
