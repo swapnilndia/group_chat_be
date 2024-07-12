@@ -2,7 +2,7 @@ import sequelize from "../configs/db.config.js";
 import { DataTypes } from "sequelize";
 
 const Message = sequelize.define(
-  "message",
+  "Message",
   {
     message_id: {
       type: DataTypes.INTEGER,

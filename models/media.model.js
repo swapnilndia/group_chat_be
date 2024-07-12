@@ -29,7 +29,7 @@ const Media = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "Users",
+        model: "users",
         key: "user_id",
       },
     },

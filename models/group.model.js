@@ -21,6 +21,11 @@ const Group = sequelize.define(
     created_by: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        // Add reference if it relates to a user
+        model: "users",
+        key: "user_id",
+      },
     },
   },
   {

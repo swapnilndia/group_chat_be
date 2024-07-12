@@ -13,7 +13,7 @@ const Contact = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "User",
+        model: "users",
         key: "user_id",
       },
     },
@@ -21,7 +21,7 @@ const Contact = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "User",
+        model: "users",
         key: "user_id",
       },
     },
