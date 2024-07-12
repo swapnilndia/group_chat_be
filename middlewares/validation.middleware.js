@@ -2,8 +2,8 @@ import { signinFormSchema, signupFormSchema } from "../utils/schema.js";
 import ApiError from "../utils/ApiError.js";
 import jwt from "jsonwebtoken";
 import GroupMember from "../models/groupMember.model.js";
-import ApiResponse from "../utils/ApiResponse.js";
-
+const A_TOKEN = process.env.ACCESS_TOKEN_SECRET;
+const R_TOKEN = process.env.REFRESH_TOKEN_SECET;
 export const signupFormValidation = async (req, res, next) => {
   try {
     await signupFormSchema.validate(req.body, {
@@ -51,7 +51,7 @@ export const accessTokenValidation = async (req, res, next) => {
     return res.status(401).json(new ApiError(401, `Access Token is Missing`));
   }
   try {
-    const payload = jwt.verify(accessToken, "awesome");
+    const payload = jwt.verify(accessToken, A_TOKEN);
     req.user = payload;
     next();
   } catch (error) {
@@ -67,7 +67,7 @@ export const refreshTokenValidation = async (req, res, next) => {
     return res.status(401).json(new ApiError(401, `Refresh Token is Missing`));
   }
   try {
-    const payload = jwt.verify(refreshToken, "emosewa");
+    const payload = jwt.verify(refreshToken, R_TOKEN);
     req.user = payload;
     next();
   } catch (error) {

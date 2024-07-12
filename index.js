@@ -12,6 +12,7 @@ import UserRouter from "./routes/user.route.js";
 import ContactRouter from "./routes/contact.route.js";
 import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
+import ArchivedMessage from "./models/archived.model.js";
 import Group from "./models/group.model.js";
 import GroupMember from "./models/groupMember.model.js";
 import Media from "./models/media.model.js";
@@ -22,6 +23,8 @@ import { instrument } from "@socket.io/admin-ui";
 import groupMessageHandler from "./websocketHandlers/groupMessageHandler.js";
 import personalMediaMessageHandler from "./websocketHandlers/personalMediaMessage.js";
 import groupMediaMessage from "./websocketHandlers/groupMediaMessage.js";
+import cron from "cron";
+import { archiveOldMessages } from "./utils/archiveFunction.js";
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -34,6 +37,18 @@ const io = new Server(server, {
 });
 app.use(cookieParser());
 const PORT = process.env.PORT || 3001;
+
+const job = new cron.CronJob(
+  "*/2 * * * *",
+  () => {
+    archiveOldMessages();
+  },
+  null,
+  true,
+  "Asia/Kolkata"
+);
+job.start();
+console.log("Cron job scheduled");
 
 // Middleware setup
 app.use(express.json());
@@ -82,25 +97,34 @@ app.use((err, req, res, next) => {
   }
   next();
 });
+// User to Message
 User.hasMany(Message, { foreignKey: "sender_id", onDelete: "CASCADE" });
 Message.belongsTo(User, { foreignKey: "sender_id", onDelete: "CASCADE" });
-
 User.hasMany(Message, { foreignKey: "receiver_id", onDelete: "CASCADE" });
 Message.belongsTo(User, { foreignKey: "receiver_id", onDelete: "CASCADE" });
 
+// User to Group (Many-to-Many)
 User.belongsToMany(Group, { through: GroupMember, foreignKey: "user_id" });
 Group.belongsToMany(User, { through: GroupMember, foreignKey: "group_id" });
 
+// GroupMember associations
 GroupMember.belongsTo(User, { foreignKey: "user_id", onDelete: "CASCADE" });
 GroupMember.belongsTo(Group, { foreignKey: "group_id", onDelete: "CASCADE" });
-
 Group.hasMany(GroupMember, { foreignKey: "group_id", onDelete: "CASCADE" });
 User.hasMany(GroupMember, { foreignKey: "user_id", onDelete: "CASCADE" });
 
+// Group to Message
 Group.hasMany(Message, { foreignKey: "group_id", onDelete: "CASCADE" });
 Message.belongsTo(Group, { foreignKey: "group_id", onDelete: "CASCADE" });
 
+// Message to Media
 Message.belongsTo(Media, { foreignKey: "media_id" });
+ArchivedMessage.belongsTo(Media, { foreignKey: "media_id" });
+
+// ArchivedMessage associations
+ArchivedMessage.belongsTo(User, { foreignKey: "sender_id", as: "sender" });
+ArchivedMessage.belongsTo(User, { foreignKey: "receiver_id", as: "receiver" });
+ArchivedMessage.belongsTo(Group, { foreignKey: "group_id" }); // if applicable
 
 // Self-referencing association
 User.belongsToMany(User, {

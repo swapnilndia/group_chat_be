@@ -6,8 +6,10 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+const BUCKET = process.env.AWS_BUCKET;
+
 const s3Client = new S3Client({
-  region: "ap-south-1",
+  region: process.env.AWS_REGION,
   credentials: {
     accessKeyId: process.env.AWS_IAM_ACCESS_KEY,
     secretAccessKey: process.env.AWS_IAM_SECRET_KEY,
@@ -16,7 +18,7 @@ const s3Client = new S3Client({
 
 export const getObjectURL = async (key) => {
   const command = new GetObjectCommand({
-    Bucket: "swapnil-gc-private",
+    Bucket: BUCKET,
     Key: key,
   });
   const url = await getSignedUrl(s3Client, command);
@@ -25,7 +27,7 @@ export const getObjectURL = async (key) => {
 export const putObject = async (filename, contentType, key) => {
   console.log(filename, contentType);
   const command = new PutObjectCommand({
-    Bucket: "swapnil-gc-private",
+    Bucket: BUCKET,
     Key: key,
     ContentType: contentType,
   });
@@ -36,7 +38,7 @@ export const putObject = async (filename, contentType, key) => {
 
 export const deleteObject = async (key) => {
   const command = new DeleteObjectCommand({
-    Bucket: "swapnil-gc-private",
+    Bucket: BUCKET,
     Key: key,
   });
   const url = await getSignedUrl(s3Client, command);

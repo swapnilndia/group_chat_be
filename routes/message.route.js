@@ -1,20 +1,15 @@
 import { Router } from "express";
 import { accessTokenValidation } from "../middlewares/validation.middleware.js";
 import {
+  deleteSignedUrl_controller,
   getGroupTextMessage_controller,
   getPersonalTextMessages_controller,
   getSignedUrl_controller,
-  groupTextMessage_controller,
-  personalTextMessage_controller,
   putSignedUrl_controller,
   saveMediaMetadata_controller,
 } from "../controllers/message.controller.js";
 
 const router = Router();
-
-//Send Message
-router.post("/personal", accessTokenValidation, personalTextMessage_controller);
-router.post("/group", accessTokenValidation, groupTextMessage_controller);
 
 // Get Message History
 router.get(
@@ -30,6 +25,6 @@ router.get(
 
 router.post("/upload-url", putSignedUrl_controller);
 router.post("/save-media", saveMediaMetadata_controller);
-router.post("/delete-media", accessTokenValidation);
+router.post("/delete-media", deleteSignedUrl_controller);
 router.post("/download-url", getSignedUrl_controller);
 export default router;
