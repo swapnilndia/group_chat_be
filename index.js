@@ -27,21 +27,17 @@ import cron from "cron";
 import { archiveOldMessages } from "./utils/archiveFunction.js";
 const app = express();
 const server = http.createServer(app);
-app.use(
-  cors({
-    origin: true,
-    optionsSuccessStatus: 200,
-    credentials: true,
-  })
-);
-app.options(
-  "*",
-  cors({
-    origin: true,
-    optionsSuccessStatus: 200,
-    credentials: true,
-  })
-);
+
+const corsOptions = {
+  origin: "https://main.d1xmkj62r2mwg1.amplifyapp.com", // Your React app's domain
+  optionsSuccessStatus: 200,
+  credentials: true,
+  methods: "GET,POST,PUT,DELETE,OPTIONS",
+  allowedHeaders: "Authorization,Content-Type",
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Preflight requests
+
 const io = new Server(server, {
   cors: {
     origin: [
